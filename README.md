@@ -1,5 +1,5 @@
 ## Flask Secure App
-This app is template flask app that provides account login, registration, password reset, account activation. It uses 'TimedJSONWebSignatureSerializer' from 'itsdangerous' for time limited token generation.
+This app is template flask app that provides account login, registration, password reset, account activation. It uses 'TimedJSONWebSignatureSerializer' from 'itsdangerous' for time limited token generation. There is a separate model entity for holding session data. It allows to gather information about logged users, history of sessions and more importantly to forcibly invalidate all cookies in case any of them get "stolen".
 
 ## Setup
 ```
