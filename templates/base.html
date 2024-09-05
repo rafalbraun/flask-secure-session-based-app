@@ -18,6 +18,7 @@
 	    </div>
     	<div class="right">
 		    {% if current_user.is_authenticated %}
+				<img class="pfp" src="{{ url_for('static', filename='images/' + current_user.image_file) }}">
 		    	<a href="#">{{ current_user.username }}</a>
 		        <a href="{{ url_for('logout') }}">Logout</a>
 		    {% else %}
