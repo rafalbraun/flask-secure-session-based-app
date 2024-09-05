@@ -15,7 +15,7 @@ $ python3 app.py
 $ source venv/bin/activate
 $ export FLASK_APP=app
 $ flask shell
->>> from app import db, User
+>>> from app import db, User, Session, Report
 >>> db.create_all()
 >>> db.drop_all()
 ```

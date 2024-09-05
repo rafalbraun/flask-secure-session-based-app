@@ -16,6 +16,7 @@ class User(db.Model, UserMixin):
     image_file = db.Column(db.String(20), nullable=False, default='default.jpg')
     password = db.Column(db.String(60), nullable=False)
     active = db.Column(db.Boolean, nullable=False, default=False)
+    blocked = db.Column(db.Boolean, nullable=False, default=False)
 
     def create_reset_token(self, expires_sec=1800):
         s = Serializer(current_app.config['SECRET_KEY'], expires_in=1800, salt='password-salt')
@@ -55,3 +56,9 @@ class Session(db.Model):
 
     def is_valid(self):
         return self.active and (self.expires_at is None or self.expires_at > datetime.utcnow())
+
+class Report(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    expires_at = db.Column(db.DateTime)

@@ -1,5 +1,5 @@
 from flask_wtf import FlaskForm
-from wtforms import StringField, PasswordField, SubmitField, BooleanField
+from wtforms import StringField, PasswordField, SubmitField, BooleanField, TextAreaField
 from wtforms.validators import DataRequired, Length, Email, EqualTo, ValidationError
 from models import User
 
@@ -48,3 +48,7 @@ class RequestActivationForm(FlaskForm):
         user = User.query.filter_by(email=email.data).first()
         if user is None:
             raise ValidationError('There is no account with that email. You must register first.')
+
+class ReportUserForm(FlaskForm):
+    explaination = TextAreaField('Explaination', validators=[DataRequired()])
+    submit = SubmitField('Report User')

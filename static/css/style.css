@@ -8,3 +8,20 @@ body {
     width: 16px;
     height: 16px;
 }
+
+table {
+    font-family: arial, sans-serif;
+    border-collapse: collapse;
+    width: 100%;
+}
+
+td, th {
+    border: 1px solid #dddddd;
+    text-align: left;
+    padding: 8px;
+}
+
+textarea {
+    width: 100%;
+    resize: vertical;
+}

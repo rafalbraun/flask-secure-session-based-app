@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% block content %}
+
+	<table>
+		<tr>
+			<th>username</th>
+			<th>email</th>
+			<th>image_file</th>
+			<th>active</th>
+			<th></th>
+			<th></th>
+			<th></th>
+		</tr>
+		{% for user in users %}
+		<tr>
+			<td>{{ user.username }}</td>
+			<td>{{ user.email }}</td>
+			<td>{{ user.image_file }}</td>
+			<td>{{ user.active }}</td>
+			<td><a href="/sessions/{{ user.username }}">sessions</a></td>
+			<td><a href="/reports/{{ user.username }}">reports</a></td>
+			<td><a href="/report_user/{{ user.username }}">report {{ user.username }}</a></td>
+		</tr>
+		{% endfor %}
+	</table>
+
+	{% if page_count == 0 %}
+		no users
+	{% else %}
+		page: {{ pagenum }} out of {{ page_count }}<br>
+	    {% for page in page_range %}
+	    	{% if page == pagenum %}
+	        <a href="/users?page={{page}}">[ {{page}} ]</a>
+	    	{% else %}
+	        <a href="/users?page={{page}}">{{page}}</a>
+	    	{% endif %}
+	    {% endfor %}
+    {% endif %}
+
+{% endblock %}

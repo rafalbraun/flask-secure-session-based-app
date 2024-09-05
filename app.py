@@ -5,12 +5,13 @@ from flask_login import LoginManager, UserMixin, login_user, current_user, logou
 from flask_mail import Mail, Message
 from itsdangerous import TimedJSONWebSignatureSerializer as Serializer
 from config import Config
-from models import db, bcrypt, User, Session 
-from forms import RegistrationForm, LoginForm, RequestResetForm, ResetPasswordForm, RequestActivationForm
+from models import db, bcrypt, User, Session, Report
+from forms import RegistrationForm, LoginForm, RequestResetForm, ResetPasswordForm, RequestActivationForm, ReportUserForm
 from functools import wraps
 from dotenv import load_dotenv
 from datetime import datetime, timedelta
 import uuid
+import math
 
 load_dotenv()
 
@@ -22,6 +23,17 @@ bcrypt.init_app(app)
 login_manager = LoginManager(app)
 login_manager.login_view = 'login'
 mail = Mail(app)
+limit = 10
+
+def pagination(clazz, count, rows):
+    entries = []
+    for row in rows:
+        row_dict = row._asdict()
+        instance = clazz(**row_dict)
+        entries.append(instance)
+    page_count = math.ceil(count/limit)
+    page_range = range(1, page_count+1)
+    return entries, page_count, page_range
 
 @app.route("/")
 def index():
@@ -31,6 +43,56 @@ def index():
 @login_required
 def internal():
     return render_template('internal.html')
+
+@app.route("/users")
+@login_required
+def users():
+    pagenum = request.args.get('page', default=1, type=int)
+    offset = (pagenum-1) * limit
+    count = db.session.query(User).count()
+    entries = db.session.query(User.username, User.email, User.password, User.active, User.image_file).limit(limit).offset(offset).all()
+    users, page_count, page_range = pagination(User, count, entries)
+    return render_template('users.html', users=users, page_count=page_count, pagenum=pagenum, page_range=page_range)
+
+@app.route("/sessions/<username>")
+@login_required
+def sessions(username):
+    pagenum = request.args.get('page', default=1, type=int)
+    offset = (pagenum-1) * limit
+    user = db.session.query(User).filter_by(username=username).first()
+    count = db.session.query(Session).filter_by(user_id=user.id).count()
+    entries = db.session.query(Session.user_id, Session.token, Session.created_at, Session.expires_at, Session.active, Session.device, Session.ip_address).filter_by(user_id=user.id).limit(limit).offset(offset).all()
+    sessions, page_count, page_range = pagination(Session, count, entries)
+    return render_template('sessions.html', sessions=sessions, page_count=page_count, pagenum=pagenum, page_range=page_range, username=username)
+
+@app.route("/reports/<username>")
+@login_required
+def reports(username):
+    pagenum = request.args.get('page', default=1, type=int)
+    offset = (pagenum-1) * limit
+    user = db.session.query(User).filter_by(username=username).first()
+    count = db.session.query(Report).filter_by(user_id=user.id).count()
+    entries = db.session.query(Report.user_id, Report.created_at, Report.expires_at).filter_by(user_id=user.id).limit(limit).offset(offset).all()
+    reports, page_count, page_range = pagination(Report, count, entries)
+    return render_template('reports.html', reports=reports, page_count=page_count, pagenum=pagenum, page_range=page_range, username=username)
+
+@app.route("/report_user/<username>", methods=['GET', 'POST'])
+@login_required
+def report_user(username):
+    form = ReportUserForm()
+    if form.validate_on_submit():
+        user = db.session.query(User).filter_by(username=username).first()
+        ## TODO check if user found
+        new_report = Report(
+            user_id=user.id,
+            created_at=datetime.utcnow(),
+            expires_at=None
+        )
+        db.session.add(new_report)
+        db.session.commit()
+        flash(f'User {username} has been reported.', 'success')
+        return redirect(url_for('report_user', username=username))
+    return render_template('report_user.html', title='Report User', username=username, form=form)
 
 @login_manager.user_loader
 def load_user(user_id):

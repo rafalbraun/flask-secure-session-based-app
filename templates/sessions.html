@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% block content %}
+
+	<table>
+		<tr>
+			<th>user_id</th>
+			<th>token</th>
+			<th>created_at</th>
+			<th>expires_at</th>
+			<th>active</th>
+			<th>device</th>
+			<th>ip_address</th>
+		</tr>
+		{% for session in sessions %}
+		<tr>
+			<td>{{ session.user_id }}</td>
+			<td>{{ session.token }}</td>
+			<td>{{ session.created_at }}</td>
+			<td>{{ session.expires_at }}</td>
+			<td>{{ session.active }}</td>
+			<td>{{ session.device }}</td>
+			<td>{{ session.ip_address }}</td>
+		</tr>
+		{% endfor %}
+	</table>
+
+	{% if page_count == 0 %}
+		no sessions
+	{% else %}
+		page: {{ pagenum }} out of {{ page_count }}<br>
+	    {% for page in page_range %}
+	    	{% if page == pagenum %}
+	        <a href="/sessions/{{username}}?page={{page}}">[ {{page}} ]</a>
+	    	{% else %}
+	        <a href="/sessions/{{username}}?page={{page}}">{{page}}</a>
+	    	{% endif %}
+	    {% endfor %}
+    {% endif %}
+
+{% endblock %}
