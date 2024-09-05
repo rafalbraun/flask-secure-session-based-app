@@ -1,0 +1,6 @@
+{% extends "base.html" %}
+{% block content %}
+
+This is index page{% if current_user.is_authenticated %}, and you are logged in as <a href="#">{{ current_user.username }}</a>{% endif %}
+
+{% endblock %}

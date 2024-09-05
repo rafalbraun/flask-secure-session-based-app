@@ -1,0 +1,3 @@
+EMAIL_USER="myuser"
+EMAIL_PASS="mypass"
+EMAIL_SERVER=sandbox.smtp.mailtrap.io
