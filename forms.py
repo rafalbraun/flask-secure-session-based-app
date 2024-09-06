@@ -1,5 +1,5 @@
 from flask_wtf import FlaskForm
-from wtforms import StringField, PasswordField, SubmitField, BooleanField, TextAreaField
+from wtforms import StringField, PasswordField, SubmitField, BooleanField, TextAreaField, DateField
 from wtforms.validators import DataRequired, Length, Email, EqualTo, ValidationError
 from models import User
 
@@ -52,3 +52,7 @@ class RequestActivationForm(FlaskForm):
 class ReportUserForm(FlaskForm):
     explaination = TextAreaField('Explaination', validators=[DataRequired()])
     submit = SubmitField('Report User')
+
+class BlockUserForm(FlaskForm):
+    date = DateField('Select Date', format='%Y-%m-%d', validators=[DataRequired()])
+    submit = SubmitField('Submit')

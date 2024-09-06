@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% block content %}
+    <div class="content-section">
+        {% with messages = get_flashed_messages() %}
+            {% if messages %}
+                {% for message in messages %}
+                    <p>{{message}}</p>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        {{ report.id }}
+        {{ report.user_id }}
+        {{ report.created_at }}
+        {{ report.expires_at }}
+        {{ report.explaination }}
+
+        <form method="POST">
+            {{ form.hidden_tag() }}
+            <div>
+                {{ form.date.label }} {{ form.date }}
+            </div>
+            <div>
+                <button type="button" onclick="setDateWithDelay(3)">3 days</button>
+                <button type="button" onclick="setDateWithDelay(7)">1 week</button>
+                <button type="button" onclick="setDateWithDelay(30)">1 month</button>
+                <button type="button" onclick='document.getElementById("date").value="3000-01-01"'>forever</button>
+            </div>
+            <div>
+                {{ form.submit }}
+            </div>
+        </form>
+    </div>
+    <script type="text/javascript">
+    function setDateWithDelay(days) {
+        const today = new Date();
+        const futureDate = new Date(today.getTime() + days * 24 * 60 * 60 * 1000);
+        const year = futureDate.getFullYear();
+        const month = ('0' + (futureDate.getMonth() + 1)).slice(-2);
+        const day = ('0' + futureDate.getDate()).slice(-2);
+
+        document.getElementById('date').value = `${year}-${month}-${day}`;
+    }
+    </script>
+{% endblock %}

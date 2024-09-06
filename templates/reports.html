@@ -1,20 +1,33 @@
 {% extends "base.html" %}
 {% block content %}
+    <div class="content-section">
+	    {% with messages = get_flashed_messages() %}
+	        {% if messages %}
+	            {% for message in messages %}
+	                <p>{{message}}</p>
+	            {% endfor %}
+	        {% endif %}
+	    {% endwith %}
 
-	<table>
-		<tr>
-			<th>user_id</th>
-			<th>created_at</th>
-			<th>expires_at</th>
-		</tr>
-		{% for report in reports %}
-		<tr>
-			<td>{{ report.user_id }}</td>
-			<td>{{ report.created_at }}</td>
-			<td>{{ report.expires_at }}</td>
-		</tr>
-		{% endfor %}
-	</table>
+		<table>
+			<tr>
+				<th>user_id</th>
+				<th>created_at</th>
+				<th>expires_at</th>
+				<th>explaination</th>
+				<th></th>
+			</tr>
+			{% for report in reports %}
+			<tr>
+				<td>{{ report.user_id }}</td>
+				<td>{{ report.created_at }}</td>
+				<td>{{ report.expires_at }}</td>
+				<td><p>{{ report.explaination }}</p></td>
+				<td><a href="/block_user/{{ report.id }}">block</a></td>
+			</tr>
+			{% endfor %}
+		</table>
+	</div>
 
 	{% if page_count == 0 %}
 		no reports

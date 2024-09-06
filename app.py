@@ -6,7 +6,7 @@ from flask_mail import Mail, Message
 from itsdangerous import TimedJSONWebSignatureSerializer as Serializer
 from config import Config
 from models import db, bcrypt, User, Session, Report
-from forms import RegistrationForm, LoginForm, RequestResetForm, ResetPasswordForm, RequestActivationForm, ReportUserForm
+from forms import RegistrationForm, LoginForm, RequestResetForm, ResetPasswordForm, RequestActivationForm, ReportUserForm, BlockUserForm
 from functools import wraps
 from dotenv import load_dotenv
 from datetime import datetime, timedelta
@@ -67,14 +67,24 @@ def sessions(username):
 
 @app.route("/reports/<username>")
 @login_required
-def reports(username):
+def user_reports(username):
     pagenum = request.args.get('page', default=1, type=int)
     offset = (pagenum-1) * limit
     user = db.session.query(User).filter_by(username=username).first()
     count = db.session.query(Report).filter_by(user_id=user.id).count()
-    entries = db.session.query(Report.user_id, Report.created_at, Report.expires_at).filter_by(user_id=user.id).limit(limit).offset(offset).all()
+    entries = db.session.query(Report.id, Report.user_id, Report.created_at, Report.expires_at, Report.explaination).filter_by(user_id=user.id).limit(limit).offset(offset).all()
     reports, page_count, page_range = pagination(Report, count, entries)
     return render_template('reports.html', reports=reports, page_count=page_count, pagenum=pagenum, page_range=page_range, username=username)
+
+@app.route("/reports")
+@login_required
+def reports():
+    pagenum = request.args.get('page', default=1, type=int)
+    offset = (pagenum-1) * limit
+    count = db.session.query(Report).count()
+    entries = db.session.query(Report.id, Report.user_id, Report.created_at, Report.expires_at, Report.explaination).limit(limit).offset(offset).all()
+    reports, page_count, page_range = pagination(Report, count, entries)
+    return render_template('reports.html', reports=reports, page_count=page_count, pagenum=pagenum, page_range=page_range)
 
 @app.route("/report_user/<username>", methods=['GET', 'POST'])
 @login_required
@@ -86,13 +96,26 @@ def report_user(username):
         new_report = Report(
             user_id=user.id,
             created_at=datetime.utcnow(),
-            expires_at=None
+            expires_at=None,
+            explaination=form.explaination.data
         )
         db.session.add(new_report)
         db.session.commit()
         flash(f'User {username} has been reported.', 'success')
         return redirect(url_for('report_user', username=username))
     return render_template('report_user.html', title='Report User', username=username, form=form)
+
+@app.route("/block_user/<report_id>", methods=['GET', 'POST'])
+@login_required
+def block_user(report_id):
+    form = BlockUserForm()
+    report = db.session.get(Report, int(report_id))
+    if form.validate_on_submit():
+        report.expires_at = form.date.data
+        db.session.commit()
+        flash(f'Report has been confirmed, user is now blocked.', 'success')
+        return redirect(url_for('reports'))
+    return render_template('block_user.html', title='Report User', form=form, report=report)
 
 @login_manager.user_loader
 def load_user(user_id):
@@ -126,8 +149,10 @@ def login():
     form = LoginForm()
     if form.validate_on_submit():
         user = db.session.query(User).filter_by(username=form.username.data).first()
-        if not user.active:
-            flash('Login Unsuccessful. Account is not active, please check your email box or resend activation email', 'info')
+        if user is None:
+            flash('Login Unsuccessful. Account does not exist.', 'info')
+        elif not user.active:
+            flash('Login Unsuccessful. Account is not active, please check your email box or resend activation email.', 'info')
         else:
             if user and bcrypt.check_password_hash(user.password, form.password.data):
                 token = str(uuid.uuid4())

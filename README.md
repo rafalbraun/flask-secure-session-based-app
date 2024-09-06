@@ -15,7 +15,7 @@ $ python3 app.py
 $ source venv/bin/activate
 $ export FLASK_APP=app
 $ flask shell
->>> from app import db, User, Session, Report
+>>> from models import db, User, Session, Report
 >>> db.create_all()
 >>> db.drop_all()
 ```
@@ -28,4 +28,9 @@ $ flask shell
 
 ## requires itsdangerous==2.0.1
 https://stackoverflow.com/questions/74039971/importerror-cannot-import-name-timedjsonwebsignatureserializer-from-itsdange
+
+## permanent sessions
+https://stackoverflow.com/questions/11783025/is-there-an-easy-way-to-make-sessions-timeout-in-flask
+
+
 
