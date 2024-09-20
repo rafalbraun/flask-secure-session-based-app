@@ -12,14 +12,16 @@
 		<table>
 			<tr>
 				<th>user_id</th>
+				<th>username</th>
 				<th>created_at</th>
 				<th>expires_at</th>
 				<th>explaination</th>
 				<th></th>
 			</tr>
-			{% for report in reports %}
+			{% for report in page %}
 			<tr>
 				<td>{{ report.user_id }}</td>
+				<td>{{ report.user.username }}</td>
 				<td>{{ report.created_at }}</td>
 				<td>{{ report.expires_at }}</td>
 				<td><p>{{ report.explaination }}</p></td>
@@ -27,19 +29,13 @@
 			</tr>
 			{% endfor %}
 		</table>
+
 	</div>
 
-	{% if page_count == 0 %}
-		no reports
-	{% else %}
-		page: {{ pagenum }} out of {{ page_count }}<br>
-	    {% for page in page_range %}
-	    	{% if page == pagenum %}
-	        <a href="/reports/{{username}}?page={{page}}">[ {{page}} ]</a>
-	    	{% else %}
-	        <a href="/reports/{{username}}?page={{page}}">{{page}}</a>
-	    	{% endif %}
-	    {% endfor %}
-    {% endif %}
+	<div class=pagination>
+	{% for item in page.iter_pages() %}
+		<a href="/reports?page={{item}}">{{item}}</a>
+	{% endfor %}
+	</div>
 
 {% endblock %}

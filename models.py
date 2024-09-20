@@ -59,7 +59,10 @@ class Session(db.Model):
 
 class Report(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    #user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     expires_at = db.Column(db.DateTime)
     explaination = db.Column(db.UnicodeText, nullable=False, default='')
+    user_id = db.mapped_column(db.Integer, db.ForeignKey("user.id"))
+    user = db.relationship("User")
+

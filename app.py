@@ -90,12 +90,8 @@ def user_reports(username):
 @app.route("/reports")
 @login_required
 def reports():
-    pagenum = request.args.get('page', default=1, type=int)
-    offset = (pagenum-1) * limit
-    count = db.session.query(Report).count()
-    entries = db.session.query(Report.id, Report.user_id, Report.created_at, Report.expires_at, Report.explaination).limit(limit).offset(offset).all()
-    reports, page_count, page_range = pagination(Report, count, entries)
-    return render_template('reports.html', reports=reports, page_count=page_count, pagenum=pagenum, page_range=page_range)
+    page = db.paginate(db.select(Report, User).join(Report, (Report.user_id==User.id)), max_per_page=10)
+    return render_template("reports.html", page=page)
 
 @app.route("/report_user/<username>", methods=['GET', 'POST'])
 @login_required

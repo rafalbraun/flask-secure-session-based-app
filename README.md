@@ -34,3 +34,24 @@ https://stackoverflow.com/questions/11783025/is-there-an-easy-way-to-make-sessio
 
 
 
+
+		<table>
+			<tr>
+				<th>user_id</th>
+				<th>username</th>
+				<th>created_at</th>
+				<th>expires_at</th>
+				<th>explaination</th>
+				<th></th>
+			</tr>
+			{% for report in reports %}
+			<tr>
+				<td>{{ report.user_id }}</td>
+				<td>{{ report.user_reported }}</td>
+				<td>{{ report.created_at }}</td>
+				<td>{{ report.expires_at }}</td>
+				<td><p>{{ report.explaination }}</p></td>
+				<td><a href="/block_user/{{ report.id }}">block</a></td>
+			</tr>
+			{% endfor %}
+		</table>
