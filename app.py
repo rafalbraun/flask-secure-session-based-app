@@ -1,5 +1,4 @@
 from flask import Flask, render_template, url_for, flash, redirect, request, make_response
-from flask_sqlalchemy import SQLAlchemy
 from flask_bcrypt import Bcrypt
 from flask_login import LoginManager, UserMixin, login_user, current_user, logout_user, login_required
 from flask_mail import Mail, Message
@@ -12,6 +11,7 @@ from dotenv import load_dotenv
 from datetime import datetime, timedelta
 import uuid
 import math
+from flask_sqlalchemy import SQLAlchemy
 
 load_dotenv()
 
@@ -24,6 +24,17 @@ login_manager = LoginManager(app)
 login_manager.login_view = 'login'
 mail = Mail(app)
 limit = 10
+
+with app.app_context():
+    db.drop_all()
+    db.create_all()
+    username="test"
+    password="test"
+    email='test@gmail.com'
+    hashed_password = bcrypt.generate_password_hash(password).decode('utf-8')
+    user = User(username=username, email=email, password=hashed_password, active=True)
+    db.session.add(user)
+    db.session.commit()
 
 def pagination(clazz, count, rows):
     entries = []
@@ -276,5 +287,5 @@ def send_activation_email(user):
                 '''
     mail.send(msg)
 
-if __name__ == '__main__':
-    app.run(debug=True)
+if __name__=="__main__":
+    app.run(debug=True, host='0.0.0.0', port=8080)
