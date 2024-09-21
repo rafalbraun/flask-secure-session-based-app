@@ -36,16 +36,6 @@ with app.app_context():
     db.session.add(user)
     db.session.commit()
 
-def pagination(clazz, count, rows):
-    entries = []
-    for row in rows:
-        row_dict = row._asdict()
-        instance = clazz(**row_dict)
-        entries.append(instance)
-    page_count = math.ceil(count/limit)
-    page_range = range(1, page_count+1)
-    return entries, page_count, page_range
-
 @app.route("/")
 def index():
     return render_template('index.html')
@@ -58,34 +48,20 @@ def internal():
 @app.route("/users")
 @login_required
 def users():
-    pagenum = request.args.get('page', default=1, type=int)
-    offset = (pagenum-1) * limit
-    count = db.session.query(User).count()
-    entries = db.session.query(User.username, User.email, User.password, User.active, User.image_file).limit(limit).offset(offset).all()
-    users, page_count, page_range = pagination(User, count, entries)
-    return render_template('users.html', users=users, page_count=page_count, pagenum=pagenum, page_range=page_range)
+    page = db.paginate(db.select(User), max_per_page=10)
+    return render_template("users.html", page=page)
 
-@app.route("/sessions/<username>")
+@app.route("/sessions/<user_id>")
 @login_required
-def sessions(username):
-    pagenum = request.args.get('page', default=1, type=int)
-    offset = (pagenum-1) * limit
-    user = db.session.query(User).filter_by(username=username).first()
-    count = db.session.query(Session).filter_by(user_id=user.id).count()
-    entries = db.session.query(Session.user_id, Session.token, Session.created_at, Session.expires_at, Session.active, Session.device, Session.ip_address).filter_by(user_id=user.id).limit(limit).offset(offset).all()
-    sessions, page_count, page_range = pagination(Session, count, entries)
-    return render_template('sessions.html', sessions=sessions, page_count=page_count, pagenum=pagenum, page_range=page_range, username=username)
+def sessions(user_id):
+    page = db.paginate(db.select(Session).filter_by(user_id=user_id), max_per_page=10)
+    return render_template("sessions.html", page=page)
 
-@app.route("/reports/<username>")
+@app.route("/reports/<user_reported_id>")
 @login_required
-def user_reports(username):
-    pagenum = request.args.get('page', default=1, type=int)
-    offset = (pagenum-1) * limit
-    user = db.session.query(User).filter_by(username=username).first()
-    count = db.session.query(Report).filter_by(user_id=user.id).count()
-    entries = db.session.query(Report.id, Report.user_id, Report.created_at, Report.expires_at, Report.explaination).filter_by(user_id=user.id).limit(limit).offset(offset).all()
-    reports, page_count, page_range = pagination(Report, count, entries)
-    return render_template('reports.html', reports=reports, page_count=page_count, pagenum=pagenum, page_range=page_range, username=username)
+def user_reports(user_reported_id):
+    page = db.paginate(db.select(Report).filter_by(user_reported_id=user_reported_id), max_per_page=10)
+    return render_template("reports.html", page=page)
 
 @app.route("/reports")
 @login_required
@@ -93,12 +69,12 @@ def reports():
     page = db.paginate(db.select(Report), max_per_page=10)
     return render_template("reports.html", page=page)
 
-@app.route("/report_user/<username>", methods=['GET', 'POST'])
+@app.route("/report_user/<user_id>", methods=['GET', 'POST'])
 @login_required
-def report_user(username):
+def report_user(user_id):
     form = ReportUserForm()
+    user = db.session.query(User).filter_by(id=user_id).first()
     if form.validate_on_submit():
-        user = db.session.query(User).filter_by(username=username).first()
         ## TODO check if user found
         new_report = Report(
             user_reported_id=user.id,
@@ -110,8 +86,8 @@ def report_user(username):
         db.session.add(new_report)
         db.session.commit()
         flash(f'User {username} has been reported.', 'success')
-        return redirect(url_for('report_user', username=username))
-    return render_template('report_user.html', title='Report User', username=username, form=form)
+        return redirect(url_for('report_user', user_id=user.id))
+    return render_template('report_user.html', title='Report User', username=user.username, form=form)
 
 @app.route("/block_user/<report_id>", methods=['GET', 'POST'])
 @login_required

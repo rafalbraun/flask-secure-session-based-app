@@ -11,7 +11,7 @@
 			<th>device</th>
 			<th>ip_address</th>
 		</tr>
-		{% for session in sessions %}
+		{% for session in page %}
 		<tr>
 			<td>{{ session.user_id }}</td>
 			<td>{{ session.token }}</td>
@@ -24,7 +24,13 @@
 		{% endfor %}
 	</table>
 
-	{% if page_count == 0 %}
+	<div class=pagination>
+	{% for item in page.iter_pages() %}
+		<a href="/sessions?page={{item}}">{{item}}</a>
+	{% endfor %}
+	</div>
+	
+<!-- 	{% if page_count == 0 %}
 		no sessions
 	{% else %}
 		page: {{ pagenum }} out of {{ page_count }}<br>
@@ -35,6 +41,6 @@
 	        <a href="/sessions/{{username}}?page={{page}}">{{page}}</a>
 	    	{% endif %}
 	    {% endfor %}
-    {% endif %}
+    {% endif %} -->
 
 {% endblock %}
