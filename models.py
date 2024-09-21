@@ -57,12 +57,13 @@ class Session(db.Model):
     def is_valid(self):
         return self.active and (self.expires_at is None or self.expires_at > datetime.utcnow())
 
+## https://stackoverflow.com/questions/22355890/sqlalchemy-multiple-foreign-keys-in-one-mapped-class-to-the-same-primary-key
 class Report(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    #user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     expires_at = db.Column(db.DateTime)
     explaination = db.Column(db.UnicodeText, nullable=False, default='')
-    user_id = db.mapped_column(db.Integer, db.ForeignKey("user.id"))
-    user = db.relationship("User")
-
+    user_reported_id = db.Column(db.Integer, db.ForeignKey("user.id"))
+    user_reporting_id = db.Column(db.Integer, db.ForeignKey("user.id"))
+    user_reported = db.relationship("User", foreign_keys=[user_reported_id])
+    user_reporting = db.relationship("User", foreign_keys=[user_reporting_id])

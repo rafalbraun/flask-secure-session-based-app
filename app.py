@@ -90,7 +90,7 @@ def user_reports(username):
 @app.route("/reports")
 @login_required
 def reports():
-    page = db.paginate(db.select(Report, User).join(Report, (Report.user_id==User.id)), max_per_page=10)
+    page = db.paginate(db.select(Report), max_per_page=10)
     return render_template("reports.html", page=page)
 
 @app.route("/report_user/<username>", methods=['GET', 'POST'])
@@ -101,7 +101,8 @@ def report_user(username):
         user = db.session.query(User).filter_by(username=username).first()
         ## TODO check if user found
         new_report = Report(
-            user_id=user.id,
+            user_reported_id=user.id,
+            user_reporting_id=user.id,
             created_at=datetime.utcnow(),
             expires_at=None,
             explaination=form.explaination.data

@@ -20,8 +20,8 @@
 			</tr>
 			{% for report in page %}
 			<tr>
-				<td>{{ report.user_id }}</td>
-				<td>{{ report.user.username }}</td>
+				<td>{{ report.user_reporting.username }}</td>
+				<td>{{ report.user_reported.username }}</td>
 				<td>{{ report.created_at }}</td>
 				<td>{{ report.expires_at }}</td>
 				<td><p>{{ report.explaination }}</p></td>
