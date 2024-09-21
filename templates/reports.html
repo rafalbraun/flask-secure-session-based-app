@@ -8,7 +8,6 @@
 	            {% endfor %}
 	        {% endif %}
 	    {% endwith %}
-
 		<table>
 			<tr>
 				<th>user_id</th>
@@ -18,24 +17,29 @@
 				<th>explaination</th>
 				<th></th>
 			</tr>
-			{% for report in page %}
+			{% for report in pagination %}
 			<tr>
 				<td>{{ report.user_reporting.username }}</td>
 				<td>{{ report.user_reported.username }}</td>
 				<td>{{ report.created_at }}</td>
 				<td>{{ report.expires_at }}</td>
-				<td><p>{{ report.explaination }}</p></td>
+				<td>{{ report.explaination }}</td>
 				<td><a href="/block_user/{{ report.id }}">block</a></td>
 			</tr>
 			{% endfor %}
 		</table>
-
 	</div>
-
 	<div class=pagination>
-	{% for item in page.iter_pages() %}
-		<a href="/reports?page={{item}}">{{item}}</a>
+	{% for page in pagination.iter_pages() %}
+		{% if page %}
+			{% if page != pagination.page %}
+				<a href="{{ url_for('reports', page=page) }}">{{ page }}</a>
+			{% else %}
+				<strong>{{ page }}</strong>
+			{% endif %}
+		{% else %}
+			<span class=ellipsis>…</span>
+		{% endif %}
 	{% endfor %}
 	</div>
-
 {% endblock %}
