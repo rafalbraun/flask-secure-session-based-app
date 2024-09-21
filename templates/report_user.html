@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block content %}
+    <div class="content-section">
+        {% with messages = get_flashed_messages() %}
+            {% if messages %}
+                {% for message in messages %}
+                    <p>{{message}}</p>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+        <form method="POST">
+            {{ form.csrf_token }}
+            <fieldset class="form-group">
+                <div class="form-group">
+                    {{ form.explaination.label(class="form-control-label") }}
+                    {{ form.explaination(class="form-control form-control-lg") }}
+                </div>
+                {% if form.explaination.errors %}
+                    <ul class="errors">
+                        {% for error in form.explaination.errors %}
+                            <li>{{ error }}</li>
+                        {% endfor %}
+                    </ul>
+                {% endif %}
+            </fieldset>
+            <div class="form-group">
+                {{ form.submit(class="btn btn-outline-info") }}
+            </div>
+        </form>
+    </div>
+{% endblock %}

@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% block content %}
+    <div class="content-section">
+	    {% with messages = get_flashed_messages() %}
+	        {% if messages %}
+	            {% for message in messages %}
+	                <p>{{message}}</p>
+	            {% endfor %}
+	        {% endif %}
+	    {% endwith %}
+		<table>
+			<tr>
+				<th>username</th>
+				<th>email</th>
+				<th>image_file</th>
+				<th>active</th>
+				<th>blocked</th>
+				<th></th>
+				<th></th>
+				<th></th>
+			</tr>
+			{% for user in pagination %}
+			<tr>
+				<td>{{ user.username }}</td>
+				<td>{{ user.email }}</td>
+				<td>{{ user.image_file }}</td>
+				<td>{{ user.active }}</td>
+				<td>{{ user.blocked }}</td>
+				<td><a href="/sessions/{{ user.id }}">sessions</a></td>
+				<td><a href="/user_reports/{{ user.id }}">reports</a></td>
+				<td><a href="/report_user/{{ user.id }}">report {{ user.username }}</a></td>
+			</tr>
+			{% endfor %}
+		</table>
+	</div>
+	<div class=pagination>
+	{% for page in pagination.iter_pages() %}
+		{% if page %}
+			{% if page != pagination.page %}
+				<a href="{{ url_for('users', page=page) }}">{{ page }}</a>
+			{% else %}
+				<strong>{{ page }}</strong>
+			{% endif %}
+		{% else %}
+			<span class=ellipsis>…</span>
+		{% endif %}
+	{% endfor %}
+	</div>
+{% endblock %}

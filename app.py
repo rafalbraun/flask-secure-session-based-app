@@ -1,16 +1,17 @@
 from flask import Flask, render_template, url_for, flash, redirect, request, make_response
-from flask_sqlalchemy import SQLAlchemy
 from flask_bcrypt import Bcrypt
 from flask_login import LoginManager, UserMixin, login_user, current_user, logout_user, login_required
 from flask_mail import Mail, Message
+from flask_sqlalchemy import SQLAlchemy
 from itsdangerous import TimedJSONWebSignatureSerializer as Serializer
 from config import Config
-from models import db, bcrypt, User, Session 
-from forms import RegistrationForm, LoginForm, RequestResetForm, ResetPasswordForm, RequestActivationForm
+from models import db, bcrypt, User, Session, Report
+from forms import RegistrationForm, LoginForm, RequestResetForm, ResetPasswordForm, RequestActivationForm, ReportUserForm, BlockUserForm
 from functools import wraps
 from dotenv import load_dotenv
 from datetime import datetime, timedelta
 import uuid
+import math
 
 load_dotenv()
 
@@ -22,6 +23,19 @@ bcrypt.init_app(app)
 login_manager = LoginManager(app)
 login_manager.login_view = 'login'
 mail = Mail(app)
+page_size = 20
+
+## uncomment if you want to reload database models on every time any project file is updated
+# with app.app_context():
+#     db.drop_all()
+#     db.create_all()
+#     username="test"
+#     password="test"
+#     email='test@gmail.com'
+#     hashed_password = bcrypt.generate_password_hash(password).decode('utf-8')
+#     user = User(username=username, email=email, password=hashed_password, active=True)
+#     db.session.add(user)
+#     db.session.commit()
 
 @app.route("/")
 def index():
@@ -31,6 +45,65 @@ def index():
 @login_required
 def internal():
     return render_template('internal.html')
+
+@app.route("/users")
+@login_required
+def users():
+    page = db.paginate(db.select(User), max_per_page=page_size)
+    return render_template("users.html", pagination=page)
+
+@app.route("/sessions/<user_id>")
+@login_required
+def sessions(user_id):
+    page = db.paginate(db.select(Session).filter_by(user_id=user_id), max_per_page=page_size)
+    return render_template("sessions.html", pagination=page, user_id=user_id)
+
+@app.route("/user_reports/<user_reported_id>")
+@login_required
+def user_reports(user_reported_id):
+    page = db.paginate(db.select(Report).filter_by(user_reported_id=user_reported_id), max_per_page=page_size)
+    return render_template("user_reports.html", pagination=page, user_reported_id=user_reported_id)
+
+@app.route("/reports")
+@login_required
+def reports():
+    page = db.paginate(db.select(Report), max_per_page=page_size)
+    return render_template("reports.html", pagination=page)
+
+@app.route("/report_user/<user_id>", methods=['GET', 'POST'])
+@login_required
+def report_user(user_id):
+    form = ReportUserForm()
+    ## TODO check if user found
+    user = db.session.query(User).filter_by(id=user_id).first()
+    if form.validate_on_submit():
+        new_report = Report(
+            user_reported_id=user.id,
+            user_reporting_id=current_user.id,
+            created_at=datetime.utcnow(),
+            expires_at=None,
+            explaination=form.explaination.data
+        )
+        db.session.add(new_report)
+        db.session.commit()
+        flash(f'User {user.username} has been reported.', 'success')
+        return redirect(url_for('report_user', user_id=user.id))
+    return render_template('report_user.html', title='Report User', username=user.username, form=form)
+
+@app.route("/block_user/<report_id>", methods=['GET', 'POST'])
+@login_required
+def block_user(report_id):
+    form = BlockUserForm()
+    report = db.session.get(Report, int(report_id))
+    if form.validate_on_submit():
+        report.expires_at = form.date.data
+        db.session.commit()
+        user = db.session.query(User).filter_by(id=report.user_reported_id).first()
+        user.blocked = True
+        db.session.commit()
+        flash(f'Report has been confirmed, user <b>{user.username}</b> is now blocked.', 'success')
+        return redirect(url_for('reports'))
+    return render_template('block_user.html', title='Report User', form=form, report=report)
 
 @login_manager.user_loader
 def load_user(user_id):
@@ -64,15 +137,17 @@ def login():
     form = LoginForm()
     if form.validate_on_submit():
         user = db.session.query(User).filter_by(username=form.username.data).first()
-        if not user.active:
-            flash('Login Unsuccessful. Account is not active, please check your email box or resend activation email', 'info')
+        if user is None:
+            flash('Login Unsuccessful. Account does not exist.', 'info')
+        elif not user.active:
+            flash('Login Unsuccessful. Account is not active, please check your email box or resend activation email.', 'info')
         else:
             if user and bcrypt.check_password_hash(user.password, form.password.data):
                 token = str(uuid.uuid4())
                 device_info = request.headers.get('User-Agent')
                 ip_address=request.remote_addr
 
-                ## There should be never situation where there are two active sessions!
+                ## There can be never situation where there are two active sessions!
                 db.session.query(Session).filter((Session.device == device_info) & (Session.ip_address == ip_address)).update({'active': False})
                 db.session.commit()
 
@@ -189,5 +264,5 @@ def send_activation_email(user):
                 '''
     mail.send(msg)
 
-if __name__ == '__main__':
-    app.run(debug=True)
+if __name__=="__main__":
+    app.run(debug=True, host='0.0.0.0', port=8080)

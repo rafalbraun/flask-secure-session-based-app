@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% block content %}
+    <div class="content-section">
+	    {% with messages = get_flashed_messages() %}
+	        {% if messages %}
+	            {% for message in messages %}
+	                <p>{{message}}</p>
+	            {% endfor %}
+	        {% endif %}
+	    {% endwith %}
+		<table>
+			<tr>
+				<th>user_id</th>
+				<th>token</th>
+				<th>created_at</th>
+				<th>expires_at</th>
+				<th>active</th>
+				<th>device</th>
+				<th>ip_address</th>
+			</tr>
+			{% for session in pagination %}
+			<tr>
+				<td>{{ session.user_id }}</td>
+				<td>{{ session.token }}</td>
+				<td>{{ session.created_at }}</td>
+				<td>{{ session.expires_at }}</td>
+				<td>{{ session.active }}</td>
+				<td>{{ session.device }}</td>
+				<td>{{ session.ip_address }}</td>
+			</tr>
+			{% endfor %}
+		</table>
+	</div>
+	<div class=pagination>
+	{% for page in pagination.iter_pages() %}
+		{% if page %}
+			{% if page != pagination.page %}
+				<a href="{{ url_for('sessions', user_id=user_id, page=page) }}">{{ page }}</a>
+			{% else %}
+				<strong>{{ page }}</strong>
+			{% endif %}
+		{% else %}
+			<span class=ellipsis>…</span>
+		{% endif %}
+	{% endfor %}
+	</div>
+{% endblock %}
